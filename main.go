@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 )
 
 func main() {
@@ -28,8 +29,28 @@ func main() {
 		panic(err)
 	}
 
-	for _, row := range data {
-		ques, ans := row[0], row[1]
-		fmt.Printf("%s, %s\n", ques, ans)
+	N := len(data)
+	correctCnt := 0
+
+	for i, row := range data {
+		ques := row[0]
+		fmt.Printf("Problem #%d: %s\n", i+1, ques)
+
+		ans, err := strconv.Atoi(row[1])
+		if err != nil {
+			panic(err)
+		}
+
+		var input int
+		fmt.Scanf("%d", &input)
+
+		if ans == input {
+			fmt.Println("Correct!")
+			correctCnt++
+		} else {
+			fmt.Println("Incorrect!")
+		}
 	}
+
+	fmt.Printf("You scored %d out of %d.\n", correctCnt, N)
 }
