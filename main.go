@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/csv"
 	"flag"
 	"fmt"
+	"os"
 )
 
 func main() {
@@ -13,6 +15,21 @@ func main() {
 	flag.IntVar(&limit, "limit", 30, "the time limit for quiz in seconds (default 30)")
 	flag.Parse()
 
-	fmt.Printf("Filename arg: %s\n", filename)
-	fmt.Printf("Limit arg: %d\n", limit)
+	file, err := os.Open(filename)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	reader.FieldsPerRecord = 2
+	data, err := reader.ReadAll()
+	if err != nil {
+		panic(err)
+	}
+
+	for _, row := range data {
+		ques, ans := row[0], row[1]
+		fmt.Printf("%s, %s\n", ques, ans)
+	}
 }
