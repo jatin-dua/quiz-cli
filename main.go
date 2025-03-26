@@ -1,12 +1,41 @@
 package main
 
 import (
+	"bufio"
 	"encoding/csv"
 	"flag"
 	"fmt"
 	"os"
-	"strconv"
+	"time"
 )
+
+func readUserInput(answerCh chan string) {
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		answerCh <- scanner.Text()
+	}
+	close(answerCh)
+}
+
+func askQuestion(question string, timeLimit time.Duration, answerCh chan string) (string, bool) {
+	fmt.Println(question)
+
+	timer := time.NewTimer(timeLimit)
+	defer timer.Stop()
+
+	select {
+	case <-answerCh:
+	default:
+	}
+
+	select {
+	case answer := <-answerCh:
+		return answer, true
+	case <-timer.C:
+		fmt.Println("Time's up!")
+		return "", false
+	}
+}
 
 func main() {
 	var filename string
@@ -32,22 +61,21 @@ func main() {
 	N := len(data)
 	correctCnt := 0
 
+	timeLimit := time.Duration(limit) * time.Second
+	answerCh := make(chan string, 1)
+
+	go readUserInput(answerCh)
+
 	for i, row := range data {
-		ques := row[0]
-		fmt.Printf("Problem #%d: %s\n", i+1, ques)
+		ques := fmt.Sprintf("Problem #%d: %s\n", i+1, row[0])
+		ans := row[1]
 
-		ans, err := strconv.Atoi(row[1])
-		if err != nil {
-			panic(err)
-		}
-
-		var input int
-		fmt.Scanf("%d", &input)
+		input, answered := askQuestion(ques, timeLimit, answerCh)
 
 		if ans == input {
 			fmt.Println("Correct!")
 			correctCnt++
-		} else {
+		} else if answered {
 			fmt.Println("Incorrect!")
 		}
 	}
